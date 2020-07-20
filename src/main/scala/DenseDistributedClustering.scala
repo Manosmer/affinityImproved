@@ -51,7 +51,7 @@ object DenseDistributedClustering extends Serializable {
 
         val spark = SparkSession.builder
             .master("local[" + cpus + "]")
-            .appName("Aff cores:" + cpus + "|D:" + inputPath + "|e:" + eps)
+            .appName("Aff Improved cores:" + cpus + "|D:" + inputPath + "|e:" + eps)
             .getOrCreate
 
         import spark.implicits._
@@ -67,10 +67,12 @@ object DenseDistributedClustering extends Serializable {
         val n = vertices.count
         var m = edges.count
 
-        var c = math.ceil(math.log(m))/math.ceil(math.log(n)) - 1 // == log_n(m/n)
+        var c = math.log(m)/math.log(n) - 1   // == log_n(m/n)
 
+        var iterations = 0
         // while edges can't fit into one machine
         while(c > eps) {
+            iterations += 1
             // size of V, U
             var k = math.floor(math.pow(n, (c - eps)/2))
             // broadcast the hashmap for parallel mapping
@@ -83,16 +85,15 @@ object DenseDistributedClustering extends Serializable {
             edges = fullPartitionVU.groupByKey().flatMap(x => MST(x._2.toArray))
             
             m = edges.count
-            c = math.ceil(math.log(m))/math.ceil(math.log(n)) - 1 // == log_n(m/n)
+            c = math.log(m)/math.log(n) - 1 // == log_n(m/n)
 
             broadcastMapper.unpersist(true)
         }
         
-
-        val clusters = clustering(edges.collect, clustersNum)
+        val clusters = clustering(edges.collect, n, clustersNum)
         // prints final mst weight
-        println(clusters.map(_._3).reduce(_ + _))
-
+        println(clusters.map(_._3).reduce((x,y) => x+y))
+        println(iterations)
         sc.stop()
     }
 }

@@ -43,12 +43,8 @@ object Clustering extends Serializable {
         for(e <- edges) {
             val v1 = vdts(e._1)
             val v2 = vdts(e._2)
-            if(!trees.contains(v1)) {
-                trees(v1) = new Tree(v1, 0)
-            }
-            if(!trees.contains(v2)) {
-                trees(v2) = new Tree(v2, 0)
-            }
+            trees(v1) = new Tree(v1, 0)
+            trees(v2) = new Tree(v2, 0)
         }
         val vSize = trees.keys.size
         var mst: Array[MstEdge] = new Array(vSize - 1)
@@ -82,7 +78,7 @@ object Clustering extends Serializable {
       * @param k the number of the final clusters
       * @return the minimum spanning forest based on the given edges and the cluster number(k).
       */
-    def clustering(E: Array[MstEdge], k: Int): Array[MstEdge] = {   
+    def clustering(E: Array[MstEdge], n: Long, k: Int): Array[MstEdge] = {   
         val edges = E.sortBy(edge => edge._3) // sort edges by length
         
         // initialize the trees of the forest
@@ -90,19 +86,15 @@ object Clustering extends Serializable {
         for(e <- edges) {
             val v1 = vdts(e._1)
             val v2 = vdts(e._2)
-            if(!trees.contains(v1)) {
-                trees(v1) = new Tree(v1, 0)
-            }
-            if(!trees.contains(v2)) {
-                trees(v2) = new Tree(v2, 0)
-            }
+            trees(v1) = new Tree(v1, 0)
+            trees(v2) = new Tree(v2, 0)
         }
         val vSize = trees.keys.size
         var mst: Array[MstEdge] = new Array(vSize - 1)
         
         var i = 0
         var edgesIncluded = 0
-        while( (vSize - edgesIncluded > k) && edgesIncluded < vSize - 1 && i < edges.length) {
+        while( (n - edgesIncluded > k) && edgesIncluded < vSize - 1 && i < edges.length) {
             val e = edges(i) // (X,Y, w)
             i += 1
 
@@ -118,6 +110,6 @@ object Clustering extends Serializable {
             }
         }
 
-        mst
+        mst.filter(_ != null)
     }
 }
